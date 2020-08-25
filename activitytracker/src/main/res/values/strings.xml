@@ -1,0 +1,46 @@
+<resources>
+    <string-array name="gender_labels_array">
+        <item>Other</item>
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+    <string-array name="gender_values_array">
+        <item>other</item>
+        <item>male</item>
+        <item>female</item>
+    </string-array>
+    <string name="app_name">ActivityTracker</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_activity_login">Login</string>
+    <string name="title_activity_register">Register</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="repeat_password">Repeat password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_up">Sign up</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_forgot_password">Forgot password?</string>
+    <string name="action_create_user">No account yet? Create one</string>
+    <string name="action_have_account">Already have an account? Sign in</string>
+    <string name="or">or</string>
+    <string name="gender">Gender</string>
+    <string name="welcome">"Welcome!"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="temp_name">Temp name</string>
+    <string name="temp_email">email@temp.com</string>
+
+    <string name="random">Random</string>
+
+    <string name="notification_channel_name">ActivityTracker Notifications</string>
+    <string name="notification_channel_description">Notifications from ActivityTracker. Include steps, reminders, goals etc.</string>
+
+    <string name="server_client_id">785686876449-gii7koe5qb0o54l6csb4au7ncrb1phea.apps.googleusercontent.com</string>
+    <string name="rest_api_uri">http://localhost:8000/api/</string>
+</resources>
