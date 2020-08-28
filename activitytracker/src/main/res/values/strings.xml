@@ -11,8 +11,9 @@
     </string-array>
     <string name="app_name">ActivityTracker</string>
     <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_meals">Meals</string>
+    <string name="title_activities">Activities</string>
+    <string name="title_me">Me</string>
     <string name="title_activity_login">Login</string>
     <string name="title_activity_register">Register</string>
     <string name="prompt_name">Name</string>
@@ -42,5 +43,4 @@
     <string name="notification_channel_description">Notifications from ActivityTracker. Include steps, reminders, goals etc.</string>
 
     <string name="server_client_id">785686876449-gii7koe5qb0o54l6csb4au7ncrb1phea.apps.googleusercontent.com</string>
-    <string name="rest_api_uri">http://localhost:8000/api/</string>
 </resources>

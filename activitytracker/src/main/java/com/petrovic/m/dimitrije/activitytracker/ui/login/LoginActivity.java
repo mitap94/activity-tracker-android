@@ -4,14 +4,13 @@ import android.app.Activity;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.text.Editable;
@@ -22,11 +21,8 @@ import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -37,10 +33,22 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.petrovic.m.dimitrije.activitytracker.MainActivity;
 import com.petrovic.m.dimitrije.activitytracker.R;
+import com.petrovic.m.dimitrije.activitytracker.data.model.LoggedInUser;
+import com.petrovic.m.dimitrije.activitytracker.data.pojo.Token;
 import com.petrovic.m.dimitrije.activitytracker.databinding.ActivityLoginBinding;
+import com.petrovic.m.dimitrije.activitytracker.rest.APIService;
+import com.petrovic.m.dimitrije.activitytracker.rest.APIUtils;
+import com.petrovic.m.dimitrije.activitytracker.rest.SessionManager;
 import com.petrovic.m.dimitrije.activitytracker.ui.register.RegisterActivity;
 import com.petrovic.m.dimitrije.activitytracker.utils.Utils;
+
+import io.reactivex.Single;
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -53,6 +61,9 @@ public class LoginActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 9001;
 
+    private APIService apiService;
+    private SessionManager sessionManager;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,9 +75,22 @@ public class LoginActivity extends AppCompatActivity {
         View view = binding.getRoot();
         setContentView(view);
 
+        binding.appBar.toolbar.setTitle(R.string.title_activity_login);
+
+        // TODO
+        //  remove temp
+        binding.gotToMain.setOnClickListener(v -> {
+            Intent mainActivityIntent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(mainActivityIntent);
+        });
+
         SpannableString createUserString = createSpannableCreateUserString();
         binding.createAccount.setText(createUserString);
         binding.createAccount.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // REST communication init
+        apiService = APIUtils.getApiService(this.getApplicationContext());
+        sessionManager = SessionManager.getInstance(this);
 
         // Configure Google sign-in to request the user's ID, email address, and basic
         // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
@@ -92,7 +116,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         // Set the login view model
-        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory())
+        loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory(getApplication()))
                 .get(LoginViewModel.class);
 
         loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
@@ -117,17 +141,13 @@ public class LoginActivity extends AppCompatActivity {
                 if (loginResult == null) {
                     return;
                 }
-                binding.loading.setVisibility(View.GONE);
+
                 if (loginResult.getError() != null) {
+                    binding.progressOverlay.getRoot().setVisibility(View.GONE);
                     showLoginFailed(loginResult.getError());
-                }
-                if (loginResult.getSuccess() != null) {
+                } else if (loginResult.getSuccess() != null) {
                     updateUiWithUser(loginResult.getSuccess());
                 }
-                setResult(Activity.RESULT_OK);
-
-                //Complete and destroy login activity once successful
-                finish();
             }
         });
 
@@ -150,31 +170,26 @@ public class LoginActivity extends AppCompatActivity {
         };
         binding.email.addTextChangedListener(afterTextChangedListener);
         binding.password.addTextChangedListener(afterTextChangedListener);
-        binding.password.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                Log.d(LOG_TAG, "onEditorActionListener");
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    binding.loading.setVisibility(View.VISIBLE);
-                    Log.d(LOG_TAG, "progressBar visible");
-                    loginViewModel.login(binding.email.getText().toString(),
-                            binding.password.getText().toString());
-                }
-                return false;
-            }
-        });
-
-        binding.loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(LOG_TAG, "onClickListener");
-                binding.loading.setVisibility(View.VISIBLE);
+        binding.password.setOnEditorActionListener((v, actionId, event) -> {
+            Log.d(LOG_TAG, "onEditorActionListener");
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                binding.progressOverlay.getRoot().setVisibility(View.VISIBLE);
                 Log.d(LOG_TAG, "progressBar visible");
                 loginViewModel.login(binding.email.getText().toString(),
                         binding.password.getText().toString());
             }
+            return false;
         });
+
+        binding.loginButton.setOnClickListener(v -> {
+            Log.d(LOG_TAG, "onClickListener");
+            binding.progressOverlay.getRoot().setVisibility(View.VISIBLE);
+            Log.d(LOG_TAG, "progressBar visible");
+            loginViewModel.login(binding.email.getText().toString(),
+                    binding.password.getText().toString());
+        });
+
+        binding.progressOverlay.getRoot().bringToFront();
     }
 
     @Override
@@ -215,6 +230,29 @@ public class LoginActivity extends AppCompatActivity {
             Log.d(LOG_TAG, "authCode = " + authCode);
 
             // TODO(developer): send code to server and exchange for access/refresh/ID tokens
+
+            Single<Token> token = apiService.googleToken(authCode);
+            token.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleObserver<Token>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        Log.d(LOG_TAG, "onSubscribe");
+                    }
+
+                    @Override
+                    public void onSuccess(Token token) {
+                        Log.d(LOG_TAG, "onSuccess token = " + token);
+
+                        Intent mainActivityIntent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(mainActivityIntent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d(LOG_TAG, "onError");
+                    }
+                });
 
 
             // Signed in successfully, show authenticated UI.
@@ -271,14 +309,22 @@ public class LoginActivity extends AppCompatActivity {
         return createUserString;
     }
 
-    private void updateUiWithUser(LoggedInUserView model) {
-        String welcome = getString(R.string.welcome) + " " +  model.getDisplayName();
-        // TODO : initiate successful logged in experience
-        Log.d(LOG_TAG, "initiate successful login experience");
+    private void updateUiWithUser(LoggedInUser user) {
+        Log.d(LOG_TAG, "Login successful");
+        String welcome = getString(R.string.welcome) + " " +  user.getDisplayName();
+
+        setResult(Activity.RESULT_OK);
+
+        //Complete and destroy login activity once successful
+        Intent mainActivityIntent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(mainActivityIntent);
+        finish();
+
         Toast.makeText(getApplicationContext(), welcome, Toast.LENGTH_LONG).show();
     }
 
-    private void showLoginFailed(@StringRes Integer errorString) {
-        Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_SHORT).show();
+    private void showLoginFailed(Throwable error) {
+        Log.d(LOG_TAG, "Login failed");
+        Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_LONG).show();
     }
 }

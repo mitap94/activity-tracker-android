@@ -37,6 +37,8 @@ public class RegisterActivity extends AppCompatActivity {
         View view = binding.getRoot();
         setContentView(view);
 
+        binding.appBar.toolbar.setTitle(R.string.title_activity_register);
+
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.gender_labels_array,R.layout.spinner_item);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
@@ -135,6 +137,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View textView) {
                 Intent loginIntent = new Intent(RegisterActivity.this, LoginActivity.class);
+                loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(loginIntent);
             }
         };
@@ -143,15 +146,4 @@ public class RegisterActivity extends AppCompatActivity {
 
         return createUserString;
     }
-
-    /*private void updateUiWithUser(LoggedInUserView model) {
-        String welcome = getString(R.string.welcome) + model.getDisplayName();
-        // TODO : initiate successful logged in experience
-        Log.d(LOG_TAG, "initiate successful login experience");
-        Toast.makeText(getApplicationContext(), welcome, Toast.LENGTH_LONG).show();
-    }
-
-    private void showLoginFailed(@StringRes Integer errorString) {
-        Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_SHORT).show();
-    }*/
 }

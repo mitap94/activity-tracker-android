@@ -10,8 +10,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.petrovic.m.dimitrije.activitytracker.data.model.LoggedInUser;
+import com.petrovic.m.dimitrije.activitytracker.data.pojo.User;
 import com.petrovic.m.dimitrije.activitytracker.databinding.ActivityMainBinding;
+import com.petrovic.m.dimitrije.activitytracker.databinding.DrawerHeaderBinding;
+import com.petrovic.m.dimitrije.activitytracker.rest.SessionManager;
 import com.petrovic.m.dimitrije.activitytracker.ui.login.LoginActivity;
 import com.petrovic.m.dimitrije.activitytracker.utils.Utils;
 
@@ -29,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
+    private SessionManager sessionManager;
+    private LoggedInUser user;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
+                R.id.navigation_home, R.id.navigation_meals, R.id.navigation_activities, R.id.navigation_me)
                 .setDrawerLayout(binding.drawerLayout)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
@@ -53,11 +63,12 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.drawerView, navController);
         NavigationUI.setupWithNavController(binding.navMain.bottomNavView, navController);
 
-        // TODO
-        // Handle better
-        // Start login
-        Intent loginIntent = new Intent(this, LoginActivity.class);
-        startActivity(loginIntent);
+        sessionManager = SessionManager.getInstance(this);
+        user = sessionManager.getUser();
+
+        if (user != null) {
+            loadHeaderInformation();
+        }
     }
 
     @Override
@@ -87,6 +98,29 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    private void loadHeaderInformation() {
+        View headerView = binding.drawerView.getHeaderView(0);
+
+        // load profile picture
+        ImageView profilePicture = (ImageView) headerView.findViewById(R.id.profile_picture);
+        String profilePictureUrl = user.getUser().getProfilePicture();
+
+        if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
+            Glide.with(this).asBitmap().load(profilePictureUrl).centerCrop().into(profilePicture);
+        } else {
+            profilePicture.setImageResource(R.mipmap.ic_launcher_round);
+        }
+
+        // load name
+        TextView name = (TextView) headerView.findViewById(R.id.name);
+        name.setText(user.getUser().getName());
+
+        // load email
+        TextView email = (TextView) headerView.findViewById(R.id.email);
+        email.setText(user.getUser().getEmail());
+
     }
 
     public static boolean isNetworkAvailable(Context context) {

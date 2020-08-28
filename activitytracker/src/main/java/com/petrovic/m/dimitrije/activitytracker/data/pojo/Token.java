@@ -9,6 +9,10 @@ public class Token {
     @Expose
     private String token;
 
+    @SerializedName("key")
+    @Expose
+    private String key;
+
     /**
      * No args constructor for use in serialization
      *
@@ -17,12 +21,13 @@ public class Token {
     }
 
     /**
-     *
+     * @param key
      * @param token
      */
-    public Token(String token) {
+    public Token(String token, String key) {
         super();
         this.token = token;
+        this.key = key;
     }
 
     public String getToken() {
@@ -33,4 +38,19 @@ public class Token {
         this.token = token;
     }
 
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    @Override
+    public String toString() {
+        if (token != null && !token.isEmpty()) {
+            return token;
+        }
+        return key;
+    }
 }

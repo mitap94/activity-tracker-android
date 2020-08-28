@@ -1,28 +1,42 @@
 package com.petrovic.m.dimitrije.activitytracker.ui.login;
 
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
+import android.app.Application;
 import android.util.Log;
 import android.util.Patterns;
 
 import com.petrovic.m.dimitrije.activitytracker.R;
-import com.petrovic.m.dimitrije.activitytracker.data.LoginRepository;
-import com.petrovic.m.dimitrije.activitytracker.data.Result;
 import com.petrovic.m.dimitrije.activitytracker.data.model.LoggedInUser;
+import com.petrovic.m.dimitrije.activitytracker.data.pojo.User;
+import com.petrovic.m.dimitrije.activitytracker.rest.APIService;
+import com.petrovic.m.dimitrije.activitytracker.rest.APIUtils;
+import com.petrovic.m.dimitrije.activitytracker.rest.SessionManager;
 import com.petrovic.m.dimitrije.activitytracker.utils.Utils;
 
-public class LoginViewModel extends ViewModel {
+import java.io.IOException;
+
+import io.reactivex.SingleObserver;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import retrofit2.HttpException;
+
+public class LoginViewModel extends AndroidViewModel {
 
     public static final String LOG_TAG = Utils.getLogTag(LoginViewModel.class);
 
     private MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
     private MutableLiveData<LoginResult> loginResult = new MutableLiveData<>();
-    private LoginRepository loginRepository;
+    private APIService apiService;
+    private SessionManager sessionManager;
 
-    LoginViewModel(LoginRepository loginRepository) {
-        this.loginRepository = loginRepository;
+    LoginViewModel(Application application) {
+        super(application);
+        this.apiService = APIUtils.getApiService(application.getApplicationContext());
+        this.sessionManager = SessionManager.getInstance(application.getApplicationContext());
     }
 
     LiveData<LoginFormState> getLoginFormState() {
@@ -33,37 +47,48 @@ public class LoginViewModel extends ViewModel {
         return loginResult;
     }
 
-    public void login(String username, String password) {
-        // can be launched in a separate asynchronous job
+    public void login(String email, String password) {
 
-        final String loginUsername = username;
-        final String loginPassword = password;
+        LoggedInUser loggedInUser = new LoggedInUser();
 
-        Thread loginThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(LOG_TAG, "Start async login job");
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        // Get token
+        apiService.token(email, password)
+                .doOnSuccess(token -> {
+                    loggedInUser.setToken(token);
+                    sessionManager.saveAuthToken(token.getToken());
+                })
+                .doOnError(e -> {
+                    Log.d(LOG_TAG, ((HttpException) e).response().errorBody().string());
+                    loginResult.postValue(new LoginResult(e));
+                })
+                .flatMap(token -> apiService.getUserInfo())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleObserver<User>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        Log.d(LOG_TAG, "onSubscribe");
+                    }
 
-                Result<LoggedInUser> result = loginRepository.login(loginUsername, loginPassword);
-
-                if (result instanceof Result.Success) {
-                    Log.d(LOG_TAG, "Login success");
-                    LoggedInUser data = ((Result.Success<LoggedInUser>) result).getData();
-                    loginResult.postValue(new LoginResult(new LoggedInUserView(data.getDisplayName())));
-                } else {
-                    Log.d(LOG_TAG, "Login error");
-                    loginResult.postValue(new LoginResult(R.string.login_failed));
-                }
-            }
-        });
-        loginThread.start();
-
-        Log.d(LOG_TAG, "exit login method");
+                    @Override
+                    public void onSuccess(User user) {
+                        Log.d(LOG_TAG, "onSuccess user = " + user);
+                        loggedInUser.setUser(user);
+                        sessionManager.setUser(loggedInUser);
+                        loginResult.postValue(new LoginResult(loggedInUser));
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d(LOG_TAG, "error getting user info");
+                        sessionManager.removeAuthToken();
+                        try {
+                            Log.d(LOG_TAG, ((HttpException) e).response().errorBody().string());
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                        loginResult.postValue(new LoginResult(e));
+                    }
+                });
     }
 
     public void loginDataChanged(String username, String password) {

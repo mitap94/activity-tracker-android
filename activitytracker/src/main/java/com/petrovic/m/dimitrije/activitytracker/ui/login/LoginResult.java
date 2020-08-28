@@ -2,30 +2,32 @@ package com.petrovic.m.dimitrije.activitytracker.ui.login;
 
 import androidx.annotation.Nullable;
 
+import com.petrovic.m.dimitrije.activitytracker.data.model.LoggedInUser;
+
 /**
  * Authentication result : success (user details) or error message.
  */
 class LoginResult {
     @Nullable
-    private LoggedInUserView success;
+    private LoggedInUser success;
     @Nullable
-    private Integer error;
+    private Throwable error;
 
-    LoginResult(@Nullable Integer error) {
+    LoginResult(@Nullable Throwable error) {
         this.error = error;
     }
 
-    LoginResult(@Nullable LoggedInUserView success) {
+    LoginResult(@Nullable LoggedInUser success) {
         this.success = success;
     }
 
     @Nullable
-    LoggedInUserView getSuccess() {
+    LoggedInUser getSuccess() {
         return success;
     }
 
     @Nullable
-    Integer getError() {
+    Throwable getError() {
         return error;
     }
 }

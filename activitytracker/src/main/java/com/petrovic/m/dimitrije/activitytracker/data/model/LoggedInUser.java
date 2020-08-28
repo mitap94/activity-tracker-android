@@ -6,9 +6,11 @@ import com.petrovic.m.dimitrije.activitytracker.data.pojo.User;
 
 public class LoggedInUser {
 
-    private Token token;
-    private User user;
-    private GoogleSignInAccount googleAccount;
+    private Token token = null;
+    private User user = null;
+    private GoogleSignInAccount googleAccount = null;
+
+    public LoggedInUser() { }
 
     public LoggedInUser(Token token, User user, GoogleSignInAccount googleAccount) {
         this.token = token;

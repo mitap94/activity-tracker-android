@@ -46,7 +46,7 @@ public class StepCounterService extends Service {
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                                         .setContentText("No content for now")
-                                        .setSmallIcon(R.drawable.ic_notifications_black_24dp)
+                                        .setSmallIcon(R.drawable.baseline_directions_run_24)
                                         .setShowWhen(false)
                                         .build();
 
