@@ -12,41 +12,42 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.navigation.NavigationView;
 import com.petrovic.m.dimitrije.activitytracker.data.model.LoggedInUser;
-import com.petrovic.m.dimitrije.activitytracker.data.pojo.User;
 import com.petrovic.m.dimitrije.activitytracker.databinding.ActivityMainBinding;
-import com.petrovic.m.dimitrije.activitytracker.databinding.DrawerHeaderBinding;
 import com.petrovic.m.dimitrije.activitytracker.fit.StepCounterService;
-import com.petrovic.m.dimitrije.activitytracker.rest.SessionManager;
+import com.petrovic.m.dimitrije.activitytracker.rest.APIUtils;
 import com.petrovic.m.dimitrije.activitytracker.ui.activities.ActivitiesFragment;
 import com.petrovic.m.dimitrije.activitytracker.ui.login.LoginActivity;
 import com.petrovic.m.dimitrije.activitytracker.ui.me.MeFragment;
 import com.petrovic.m.dimitrije.activitytracker.utils.Utils;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
-import androidx.navigation.NavDirections;
-import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
-import androidx.navigation.Navigator;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String LOG_TAG = Utils.getLogTag(MainActivity.class);
 
-    private AppBarConfiguration appBarConfiguration;
 
     private ActivityMainBinding binding;
 
-    NavController navController;
-    private SessionManager sessionManager;
-    private LoggedInUser user;
+    private AppBarConfiguration appBarConfiguration;
+    private NavController navController;
+    private View headerView;
+    private MainViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,20 +66,44 @@ public class MainActivity extends AppCompatActivity {
         // menu should be considered as top level destinations.
         appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_meals, R.id.navigation_activities, R.id.navigation_me)
-                .setDrawerLayout(binding.drawerLayout)
+                .setOpenableLayout(binding.drawerLayout)
                 .build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.drawerView, navController);
         NavigationUI.setupWithNavController(binding.navMain.bottomNavView, navController);
 
-        sessionManager = SessionManager.getInstance(this);
-        user = sessionManager.getUser();
+        headerView = binding.drawerView.getHeaderView(0);
 
-        // Populate header with user info
-        if (user != null) {
-            loadHeaderInformation();
-        }
+        headerView.setOnClickListener(v -> {
+            Log.d(LOG_TAG, "Header view clicked");
+            if(binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                binding.drawerLayout.closeDrawer(GravityCompat.START);
+            }
+            Bundle bundle = new Bundle();
+            bundle.putInt(MeFragment.INIT_FRAGMENT, MeFragment.FRAGMENT_POSITION.PROFILE_FRAGMENT.ordinal()); // show the profile fragment
+            navController.navigate(R.id.navigation_me, bundle);
+        });
+
+        binding.drawerView.setNavigationItemSelectedListener(this);
+
+        viewModel = new ViewModelProvider(this, new MainViewModelFactory(getApplication())).get(MainViewModel.class);
+
+        viewModel.getSessionManagerMutableLiveData().observe(this, sessionManager -> {
+            Log.d(LOG_TAG, "loadHeaderInfo");
+            if (sessionManager.getUser() != null) {
+                loadHeaderInformation(sessionManager.getUser());
+            } else { // logout
+                APIUtils.getGoogleClient(this).signOut().addOnCompleteListener(this,
+                        task -> {
+                            Intent loginActivityIntent = new Intent(MainActivity.this, LoginActivity.class);
+                            startActivity(loginActivityIntent);
+                            finish();
+
+                            Toast.makeText(getApplicationContext(), "Signed out!", Toast.LENGTH_LONG).show();
+                        });
+            }
+        });
 
         // Start ActivitiesFragment if clicked from service
         Intent intent = getIntent();
@@ -129,28 +154,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        Log.d(LOG_TAG, "onNavigationItemSelected id " + item.getItemId());
+        if (item.getItemId() == R.id.navigation_logout) {
+            viewModel.logout();
+            return true;
+        } else {
+            navController.navigate(item.getItemId());
+            binding.drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+        }
+    }
+
+    @Override
     public boolean onSupportNavigateUp() {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
     }
 
-    private void loadHeaderInformation() {
-        View headerView = binding.drawerView.getHeaderView(0);
+    @Override
+    public void onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
 
+    private void loadHeaderInformation(LoggedInUser user) {
         // load profile picture
         ImageView profilePicture = (ImageView) headerView.findViewById(R.id.profile_picture);
         String profilePictureUrl = user.getUser().getProfilePicture();
-
-        profilePicture.setOnClickListener(v -> {
-            Log.d(LOG_TAG, "Profile picture clicked");
-            if(binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                binding.drawerLayout.closeDrawer(GravityCompat.START);
-            }
-            Bundle bundle = new Bundle();
-            bundle.putInt(MeFragment.INIT_FRAGMENT, 2); // init the profile fragment
-            navController.navigate(R.id.navigation_me, bundle);
-        });
 
         if (profilePictureUrl != null && !profilePictureUrl.isEmpty()) {
             Glide.with(this).asBitmap().load(profilePictureUrl).centerCrop().into(profilePicture);

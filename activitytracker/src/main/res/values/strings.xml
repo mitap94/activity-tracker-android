@@ -1,8 +1,8 @@
 <resources>
-    <string-array name="gender_labels_array">
-        <item>Other</item>
-        <item>Male</item>
-        <item>Female</item>
+    <string-array name="me_tabs_array">
+        <item>Info</item>
+        <item>Items</item>
+        <item>Profile</item>
     </string-array>
     <string-array name="gender_values_array">
         <item>other</item>
@@ -26,6 +26,9 @@
     <string name="action_forgot_password">Forgot password?</string>
     <string name="action_create_user">No account yet? Create one</string>
     <string name="action_have_account">Already have an account? Sign in</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
     <string name="or">or</string>
     <string name="gender">Gender</string>
     <string name="welcome">"Welcome!"</string>

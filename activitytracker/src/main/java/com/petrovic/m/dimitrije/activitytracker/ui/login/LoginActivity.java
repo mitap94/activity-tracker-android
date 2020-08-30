@@ -2,15 +2,12 @@ package com.petrovic.m.dimitrije.activitytracker.ui.login;
 
 import android.app.Activity;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.text.Editable;
@@ -28,15 +25,15 @@ import android.widget.Toast;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.Task;
 import com.petrovic.m.dimitrije.activitytracker.MainActivity;
 import com.petrovic.m.dimitrije.activitytracker.R;
 import com.petrovic.m.dimitrije.activitytracker.data.model.LoggedInUser;
-import com.petrovic.m.dimitrije.activitytracker.data.pojo.Token;
+import com.petrovic.m.dimitrije.activitytracker.data.pojo.User;
 import com.petrovic.m.dimitrije.activitytracker.databinding.ActivityLoginBinding;
 import com.petrovic.m.dimitrije.activitytracker.rest.APIService;
 import com.petrovic.m.dimitrije.activitytracker.rest.APIUtils;
@@ -44,11 +41,7 @@ import com.petrovic.m.dimitrije.activitytracker.rest.SessionManager;
 import com.petrovic.m.dimitrije.activitytracker.ui.register.RegisterActivity;
 import com.petrovic.m.dimitrije.activitytracker.utils.Utils;
 
-import io.reactivex.Single;
-import io.reactivex.SingleObserver;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
+import java.util.Set;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -61,7 +54,6 @@ public class LoginActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 9001;
 
-    private APIService apiService;
     private SessionManager sessionManager;
 
     @Override
@@ -77,9 +69,12 @@ public class LoginActivity extends AppCompatActivity {
 
         binding.appBar.toolbar.setTitle(R.string.title_activity_login);
 
-        // TODO
-        //  remove temp
+        // TODO remove temp
         binding.gotToMain.setOnClickListener(v -> {
+            User tempUser = new User();
+            LoggedInUser tempLoggedInUser = new LoggedInUser();
+            tempLoggedInUser.setUser(tempUser);
+            sessionManager.setUser(tempLoggedInUser);
             Intent mainActivityIntent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(mainActivityIntent);
         });
@@ -89,65 +84,44 @@ public class LoginActivity extends AppCompatActivity {
         binding.createAccount.setMovementMethod(LinkMovementMethod.getInstance());
 
         // REST communication init
-        apiService = APIUtils.getApiService(this.getApplicationContext());
         sessionManager = SessionManager.getInstance(this);
 
-        // Configure Google sign-in to request the user's ID, email address, and basic
-        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestServerAuthCode(getString(R.string.server_client_id))
-                .requestEmail()
-                .build();
-
-        // Build a GoogleSignInClient with the options specified by gso.
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-        //mGoogleSignInClient.silentSignIn();
-
-        // TODO
-        // temp
-        mGoogleSignInClient.signOut();
+        // Get Google client
+        mGoogleSignInClient = APIUtils.getGoogleClient(this);
 
         binding.googleLoginButton.setSize(SignInButton.SIZE_STANDARD);
-        binding.googleLoginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                googleLogin();
-            }
-        });
+        binding.googleLoginButton.setOnClickListener(v -> googleLogin());
 
         // Set the login view model
         loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory(getApplication()))
                 .get(LoginViewModel.class);
 
-        loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
-            @Override
-            public void onChanged(@Nullable LoginFormState loginFormState) {
-                if (loginFormState == null) {
-                    return;
-                }
-                binding.loginButton.setEnabled(loginFormState.isDataValid());
-                if (loginFormState.getUsernameError() != null) {
-                    binding.email.setError(getString(loginFormState.getUsernameError()));
-                }
-                if (loginFormState.getPasswordError() != null) {
-                    binding.password.setError(getString(loginFormState.getPasswordError()));
-                }
+        loginViewModel.getLoginFormState().observe(this, loginFormState -> {
+            if (loginFormState == null) {
+                return;
+            }
+            binding.loginButton.setEnabled(loginFormState.isDataValid());
+            if (loginFormState.getUsernameError() != null) {
+                binding.email.setError(getString(loginFormState.getUsernameError()));
+            }
+            if (loginFormState.getPasswordError() != null) {
+                binding.password.setError(getString(loginFormState.getPasswordError()));
             }
         });
 
-        loginViewModel.getLoginResult().observe(this, new Observer<LoginResult>() {
-            @Override
-            public void onChanged(@Nullable LoginResult loginResult) {
-                if (loginResult == null) {
-                    return;
-                }
+        loginViewModel.getLoginResult().observe(this, loginResult -> {
+            if (loginResult == null) {
+                return;
+            }
 
-                if (loginResult.getError() != null) {
-                    binding.progressOverlay.getRoot().setVisibility(View.GONE);
-                    showLoginFailed(loginResult.getError());
-                } else if (loginResult.getSuccess() != null) {
-                    updateUiWithUser(loginResult.getSuccess());
-                }
+            if (loginResult.getError() != null) {
+                binding.progressOverlay.getRoot().setVisibility(View.GONE);
+                showLoginFailed(loginResult.getError());
+            } else if (loginResult.getSuccess() != null) {
+                updateUiWithUser(loginResult.getSuccess());
+            } else {
+                binding.progressOverlay.getRoot().setVisibility(View.GONE);
+                Log.d(LOG_TAG, "Silent login failed");
             }
         });
 
@@ -198,11 +172,7 @@ public class LoginActivity extends AppCompatActivity {
 
         Log.d(LOG_TAG, "onStart");
 
-        // Check for existing Google Sign In account, if the user is already signed in
-        // the GoogleSignInAccount will be non-null.
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-
-        Toast.makeText(getApplicationContext(), "GoogleSignInAccount " + (account != null ? account.getDisplayName() : "not signed in to Google"), Toast.LENGTH_LONG).show();
+        attemptSilentLogin();
     }
 
     @Override
@@ -224,74 +194,41 @@ public class LoginActivity extends AppCompatActivity {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
-            String authCode = account.getServerAuthCode();
-            // TODO remove
-            //  used for debugging
-            Log.d(LOG_TAG, "authCode = " + authCode);
-
-            // TODO(developer): send code to server and exchange for access/refresh/ID tokens
-
-            Single<Token> token = apiService.googleToken(authCode);
-            token.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleObserver<Token>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                        Log.d(LOG_TAG, "onSubscribe");
-                    }
-
-                    @Override
-                    public void onSuccess(Token token) {
-                        Log.d(LOG_TAG, "onSuccess token = " + token);
-
-                        Intent mainActivityIntent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(mainActivityIntent);
-                        finish();
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.d(LOG_TAG, "onError");
-                    }
-                });
-
-
-            // Signed in successfully, show authenticated UI.
-            Toast.makeText(getApplicationContext(), "GoogleSignInAccount " + (account != null ? account.getDisplayName() : "not signed in to Google"), Toast.LENGTH_LONG).show();
+            loginViewModel.loginGoogle(account);
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
             Log.w(LOG_TAG, "signInResult:failed code=" + e.getStatusCode());
-            Toast.makeText(getApplicationContext(), "Not signed in to Google!", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Error signing in to Google!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void attemptSilentLogin() {
+        Log.d(LOG_TAG, "Attempting silent log in");
+        // Check for existing Google Sign In account, if the user is already signed in
+        // the GoogleSignInAccount will be non-null.
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+
+        binding.progressOverlay.getRoot().setVisibility(View.VISIBLE);
+
+        if (account != null) {
+            // TODO
+            //  issue with calling silentLoginGoogle with authCode authentication
+            Log.d(LOG_TAG, "Already signed in to Google, name: " + account.getDisplayName() + ", email: " + account.getEmail());
+            loginViewModel.silentLogin(account);
+        } else {
+            Log.d(LOG_TAG, "Not signed in to Google");
+            loginViewModel.silentLogin(null);
         }
     }
 
     public void googleLogin() {
         Log.d(LOG_TAG, "googleLogin");
 
+        binding.progressOverlay.getRoot().setVisibility(View.VISIBLE);
+
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-    private void googleLogout() {
-        Log.d(LOG_TAG, "googleLogout");
-        mGoogleSignInClient.signOut().addOnCompleteListener(this,
-                new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                //updateUI(null);
-            }
-        });
-    }
-
-    private void googleRevokeAccess() {
-        Log.d(LOG_TAG, "googleRevokeAccess");
-        mGoogleSignInClient.revokeAccess().addOnCompleteListener(this,
-                new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        //updateUI(null);
-                    }
-                });
     }
 
     private SpannableString createSpannableCreateUserString() {
@@ -312,6 +249,10 @@ public class LoginActivity extends AppCompatActivity {
     private void updateUiWithUser(LoggedInUser user) {
         Log.d(LOG_TAG, "Login successful");
         String welcome = getString(R.string.welcome) + " " +  user.getDisplayName();
+
+        if (user.getGoogleAccount() != null) {
+            welcome += "\n             Google Sign-In";
+        }
 
         setResult(Activity.RESULT_OK);
 

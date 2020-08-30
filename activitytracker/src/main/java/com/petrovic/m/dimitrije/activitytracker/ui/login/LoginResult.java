@@ -13,6 +13,10 @@ class LoginResult {
     @Nullable
     private Throwable error;
 
+    LoginResult() {
+
+    }
+
     LoginResult(@Nullable Throwable error) {
         this.error = error;
     }

@@ -40,95 +40,14 @@ public class RegisterActivity extends AppCompatActivity {
         binding.appBar.toolbar.setTitle(R.string.title_activity_register);
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.gender_labels_array,R.layout.spinner_item);
+                R.array.gender_values_array,R.layout.spinner_item);
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         binding.genderSpinner.setAdapter(adapter);
-        //String selectedVal = getResources().getStringArray(R.array.gender_values)[genderSpinner.getSelectedItemPosition()];
 
         SpannableString haveAccountString = createSpannableHaveAccountString();
         binding.haveAccount.setText(haveAccountString);
         binding.haveAccount.setMovementMethod(LinkMovementMethod.getInstance());
 
-        /*loginViewModel.getLoginFormState().observe(this, new Observer<LoginFormState>() {
-            @Override
-            public void onChanged(@Nullable LoginFormState loginFormState) {
-                if (loginFormState == null) {
-                    return;
-                }
-                loginButton.setEnabled(loginFormState.isDataValid());
-                if (loginFormState.getUsernameError() != null) {
-                    emailEditText.setError(getString(loginFormState.getUsernameError()));
-                }
-                if (loginFormState.getPasswordError() != null) {
-                    passwordEditText.setError(getString(loginFormState.getPasswordError()));
-                }
-            }
-        });*/
-
-        /*loginViewModel.getLoginResult().observe(this, new Observer<LoginResult>() {
-            @Override
-            public void onChanged(@Nullable LoginResult loginResult) {
-                if (loginResult == null) {
-                    return;
-                }
-                loadingProgressBar.setVisibility(View.GONE);
-                if (loginResult.getError() != null) {
-                    showLoginFailed(loginResult.getError());
-                }
-                if (loginResult.getSuccess() != null) {
-                    updateUiWithUser(loginResult.getSuccess());
-                }
-                setResult(Activity.RESULT_OK);
-
-                //Complete and destroy login activity once successful
-                finish();
-            }
-        });*/
-
-        /*TextWatcher afterTextChangedListener = new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // ignore
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // ignore
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                loginViewModel.loginDataChanged(emailEditText.getText().toString(),
-                        passwordEditText.getText().toString());
-            }
-        };
-        emailEditText.addTextChangedListener(afterTextChangedListener);
-        passwordEditText.addTextChangedListener(afterTextChangedListener);
-        passwordEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                Log.d(LOG_TAG, "onEditorActionListener");
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    loadingProgressBar.setVisibility(View.VISIBLE);
-                    Log.d(LOG_TAG, "progressBar visible");
-                    loginViewModel.login(emailEditText.getText().toString(),
-                            passwordEditText.getText().toString());
-                }
-                return false;
-            }
-        });
-
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(LOG_TAG, "onClickListener");
-                loadingProgressBar.setVisibility(View.VISIBLE);
-                Log.d(LOG_TAG, "progressBar visible");
-                loginViewModel.login(emailEditText.getText().toString(),
-                        passwordEditText.getText().toString());
-            }
-        });*/
     }
 
     private SpannableString createSpannableHaveAccountString() {

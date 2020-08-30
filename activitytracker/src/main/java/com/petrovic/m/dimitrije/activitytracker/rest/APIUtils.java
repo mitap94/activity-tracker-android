@@ -2,6 +2,11 @@ package com.petrovic.m.dimitrije.activitytracker.rest;
 
 import android.content.Context;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.petrovic.m.dimitrije.activitytracker.R;
+
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -18,6 +23,9 @@ public final class APIUtils {
 
     // ApiService for making REST calls
     private static APIService apiService = null;
+
+    // Client for making Google calls
+    private static GoogleSignInClient googleSignInClient = null;
 
     // static class
     private APIUtils() { }
@@ -45,5 +53,19 @@ public final class APIUtils {
                 .build());
     }
 
+    public static GoogleSignInClient getGoogleClient(Context context) {
+        if (googleSignInClient == null) {
+            // Configure Google sign-in to request the user's ID, email address, and basic
+            // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestServerAuthCode(context.getString(R.string.server_client_id))
+                    .requestEmail()
+                    .build();
 
+            // Build a GoogleSignInClient with the options specified by gso.
+            googleSignInClient = GoogleSignIn.getClient(context, gso);
+        }
+
+        return googleSignInClient;
+    }
 }
