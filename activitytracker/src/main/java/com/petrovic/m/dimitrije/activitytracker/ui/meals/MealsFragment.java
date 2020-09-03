@@ -13,28 +13,37 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.petrovic.m.dimitrije.activitytracker.R;
+import com.petrovic.m.dimitrije.activitytracker.databinding.FragmentActivitiesBinding;
+import com.petrovic.m.dimitrije.activitytracker.databinding.FragmentMealsBinding;
 
 public class MealsFragment extends Fragment {
+
+    private FragmentMealsBinding binding;
 
     private MealsViewModel mealsViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
+
+        binding = FragmentMealsBinding.inflate(inflater, container, false);
+        View root =  binding.getRoot();
+
         mealsViewModel = new
                 ViewModelProvider(this).get(MealsViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_meals, container, false);
-        final TextView textView = root.findViewById(R.id.text_meals);
-        mealsViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-                textView.setText(s);
-            }
-        });
+
+        mealsViewModel.getText().observe(getViewLifecycleOwner(), s -> binding.textMeals.setText(s));
+
         return root;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }

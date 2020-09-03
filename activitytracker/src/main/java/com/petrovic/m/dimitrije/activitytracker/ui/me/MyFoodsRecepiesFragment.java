@@ -9,19 +9,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.petrovic.m.dimitrije.activitytracker.R;
 import com.petrovic.m.dimitrije.activitytracker.databinding.FragmentInfoBinding;
-import com.petrovic.m.dimitrije.activitytracker.databinding.FragmentItemsBinding;
+import com.petrovic.m.dimitrije.activitytracker.databinding.FragmentMyfoodsrecepiesBinding;
 
-public class InfoFragment extends Fragment {
+public class MyFoodsRecepiesFragment extends Fragment {
 
-    private FragmentInfoBinding binding;
+    private FragmentMyfoodsrecepiesBinding binding;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        binding = FragmentInfoBinding.inflate(inflater, container, false);
+        binding = FragmentMyfoodsrecepiesBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
