@@ -140,8 +140,9 @@
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="64dp"
         android:text="Go to main"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/google_login_button" />
+        app:layout_constraintTop_toBottomOf="@+id/google_login_button"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

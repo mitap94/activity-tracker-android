@@ -14,7 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public final class APIUtils {
 
-    public static final String REST_API_URI = "http://192.168.0.26:8000/api/";
+    public static final String REST_API_URI = "http://192.168.1.104:8000/api/";
 
     // Endpoints
     public static final String TOKEN_URI = "user/token/";

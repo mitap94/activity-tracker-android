@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.RelativeSizeSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -72,7 +75,13 @@ public class ActivitiesFragment extends Fragment {
         activitiesViewModel = new
                 ViewModelProvider(this).get(ActivitiesViewModel.class);
 
-        activitiesViewModel.getText().observe(getViewLifecycleOwner(), s -> binding.textActivities.setText(s));
+//        activitiesViewModel.getText().observe(getViewLifecycleOwner(), s -> binding.textActivities.setText(s));
+
+        SpannableString steps = new SpannableString("576 steps   47 kcal");
+        steps.setSpan(new RelativeSizeSpan(2f), 0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        steps.setSpan(new RelativeSizeSpan(2f), 12, 14, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.stepsInfo.setText(steps);
+
         return root;
     }
 

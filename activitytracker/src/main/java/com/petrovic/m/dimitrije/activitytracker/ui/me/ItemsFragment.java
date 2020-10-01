@@ -1,5 +1,6 @@
 package com.petrovic.m.dimitrije.activitytracker.ui.me;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,9 +21,27 @@ public class ItemsFragment extends Fragment {
 
     private static final String LOG_TAG = Utils.getLogTag(ItemsFragment.class);
 
+    private OnFoodSelectedListener listener;
+
     private FragmentItemsBinding binding;
 
     ListViewAdapter listViewAdapter;
+
+    // Container Activity must implement this interface
+    public interface OnFoodSelectedListener {
+        public void onFoodSelected();
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        try {
+            listener = (OnFoodSelectedListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString() + " must implement OnFoodSelectedListener");
+        }
+
+    }
 
     @Nullable
     @Override
@@ -41,6 +60,7 @@ public class ItemsFragment extends Fragment {
         binding.itemList.setAdapter(listViewAdapter);
         binding.itemList.setOnItemClickListener((parent, view1, position, id) -> {
             // TODO replace fragment
+            listener.onFoodSelected();
             
             Toast.makeText(ItemsFragment.this.getContext(), "Item " + position + " clicked!", Toast.LENGTH_LONG).show();
         });

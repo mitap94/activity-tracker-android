@@ -6,9 +6,18 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.IBinder;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
 import android.util.Log;
+import android.widget.RemoteViews;
+import android.widget.TextView;
 
 import androidx.core.app.NotificationCompat;
 
@@ -55,11 +64,21 @@ public class StepCounterService extends Service {
             PendingIntent pendingIntent =
                     PendingIntent.getActivity(this, 0, activitiesIntent, 0);
 
+            SpannableString string = new SpannableString("576 steps         47 kcal");
+            string.setSpan(new RelativeSizeSpan(2f), 0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            string.setSpan(new RelativeSizeSpan(2f), 18, 20, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            RemoteViews customNotification = new RemoteViews(getPackageName(), R.layout.custom_notification);
+            customNotification.setTextViewText(R.id.info_notification, string);
+
             Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentText("No content for now")
+                    .setContentText(string)
                     .setContentIntent(pendingIntent)
                     .setSmallIcon(R.drawable.baseline_directions_run_24)
                     .setShowWhen(false)
+                    .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                    .setCustomBigContentView(customNotification)
+//                    .setContentText(string)
                     .build();
 
             startForeground(NOTIFICATION_ID, notification);

@@ -4,16 +4,12 @@
     <item
         android:id="@+id/sign_out"
         android:icon="@drawable/ic_home_black_24dp"
-        android:title="@string/action_sign_out" />
+        android:title="My food" />
 
     <item
         android:id="@+id/random"
         android:icon="@drawable/ic_dashboard_black_24dp"
-        android:title="@string/random" />
+        android:title="All food" />
 
-    <item
-        android:id="@+id/random1"
-        android:icon="@drawable/ic_notifications_black_24dp"
-        android:title="@string/random" />
 
 </menu>

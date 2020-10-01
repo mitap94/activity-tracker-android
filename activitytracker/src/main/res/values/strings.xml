@@ -18,6 +18,8 @@
     <string name="title_activity_register">Register</string>
     <string name="my_recipes">My Recipes</string>
     <string name="my_foods">My Foods</string>
+    <string name="add_foods">Add Food</string>
+    <string name="daily_meals">Daily Meals</string>
     <string name="prompt_name">Name</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>

@@ -24,20 +24,25 @@ import com.petrovic.m.dimitrije.activitytracker.fit.StepCounterService;
 import com.petrovic.m.dimitrije.activitytracker.rest.APIUtils;
 import com.petrovic.m.dimitrije.activitytracker.ui.activities.ActivitiesFragment;
 import com.petrovic.m.dimitrije.activitytracker.ui.login.LoginActivity;
+import com.petrovic.m.dimitrije.activitytracker.ui.me.FoodFragment;
+import com.petrovic.m.dimitrije.activitytracker.ui.me.ItemsFragment;
 import com.petrovic.m.dimitrije.activitytracker.ui.me.MeFragment;
+import com.petrovic.m.dimitrije.activitytracker.ui.meals.MealsFragment;
 import com.petrovic.m.dimitrije.activitytracker.utils.Utils;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, ItemsFragment.OnFoodSelectedListener, MealsFragment.OnAddFoodSelectedListener {
 
     private static final String LOG_TAG = Utils.getLogTag(MainActivity.class);
 
@@ -225,4 +230,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return isConnected;
     }
 
+    @Override
+    public void onFoodSelected() {
+        navController.navigate(R.id.navigation_my_food);
+    }
+
+    @Override
+    public void onAddFoodSelected() {
+        navController.navigate(R.id.navigation_daily_food);
+    }
 }

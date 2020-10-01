@@ -28,4 +28,22 @@
         android:name="com.petrovic.m.dimitrije.activitytracker.ui.me.MeFragment"
         android:label="@string/title_me"
         tools:layout="@layout/fragment_me" />
+
+    <fragment
+        android:id="@+id/navigation_my_food"
+        android:name="com.petrovic.m.dimitrije.activitytracker.ui.me.FoodFragment"
+        android:label="Add Food"
+        tools:layout="@layout/fragment_food" />
+
+    <fragment
+        android:id="@+id/navigation_daily_food"
+        android:name="com.petrovic.m.dimitrije.activitytracker.ui.meals.DailyMealsFragment"
+        android:label="@string/daily_meals"
+        tools:layout="@layout/fragment_daily_meals" />
+
+    <fragment
+        android:id="@+id/navigation_add_food"
+        android:name="com.petrovic.m.dimitrije.activitytracker.ui.me.FoodFragment"
+        android:label="@string/add_foods"
+        tools:layout="@layout/fragment_food" />
 </navigation>

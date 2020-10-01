@@ -51,6 +51,14 @@ public class ListViewAdapter extends BaseAdapter {
             convertView = binding.getRoot();
         }
 
+        if (position == 0) {
+            ((TextView) convertView.findViewById(R.id.list_count))
+                    .setText("3");
+        } else {
+            ((TextView) convertView.findViewById(R.id.list_count))
+                    .setText("5");
+        }
+
         ((TextView) convertView.findViewById(R.id.list_text))
                 .setText(textIds[position]);
 

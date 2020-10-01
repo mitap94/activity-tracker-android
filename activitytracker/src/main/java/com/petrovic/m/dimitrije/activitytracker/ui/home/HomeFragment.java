@@ -1,6 +1,9 @@
 package com.petrovic.m.dimitrije.activitytracker.ui.home;
 
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.RelativeSizeSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +32,16 @@ public class HomeFragment extends Fragment {
 
         homeViewModel = new
                 ViewModelProvider(this).get(HomeViewModel.class);
-        homeViewModel.getText().observe(getViewLifecycleOwner(), s -> binding.textHome.setText(s));
+//        homeViewModel.getText().observe(getViewLifecycleOwner(), s -> binding.textHome.setText(s));
+
+        SpannableString steps = new SpannableString("576 steps   47 kcal");
+        steps.setSpan(new RelativeSizeSpan(2f), 0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        steps.setSpan(new RelativeSizeSpan(2f), 12, 14, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.stepsInfo.setText(steps);
+
+        SpannableString kcal = new SpannableString("1800 kcal");
+        kcal.setSpan(new RelativeSizeSpan(2f), 0, 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        binding.mealInfo.setText(kcal);
 
         return root;
     }
